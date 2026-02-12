@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>BrainzIDs from CSV</title>
+    <title>BrainzIDs + Lidarr</title>
     <style>
         body {
             background: #0F172A;
             color: white;
             font-family: Arial, sans-serif;
             text-align: center;
-            padding-top: 100px;
+            padding: 40px;
         }
         .box {
             border: 2px dashed #888;
@@ -26,17 +26,57 @@
             font-weight: bold;
             cursor: pointer;
         }
+        table {
+            margin: 40px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        td, th {
+            border: 1px solid #444;
+            padding: 8px;
+        }
+        .ok { color: #22c55e; }
+        .warn { color: orange; }
+        .err { color: red; }
     </style>
 </head>
 <body>
-    <h1>BrainzIDs from CSV</h1>
+    <h1>Importa artisti in Lidarr</h1>
+
     <div class="box">
         <form method="POST" enctype="multipart/form-data">
             <input type="file" name="file" accept=".csv" required>
             <br>
-            <button type="submit">Converti</button>
+            <button type="submit">Converti e importa</button>
         </form>
     </div>
-    <p>Il CSV deve avere una colonna chiamata <b>Artist</b></p>
+
+    {% if results %}
+    <h2>Risultati</h2>
+    <table>
+        <tr>
+            <th>Artista</th>
+            <th>MBID</th>
+            <th>Stato</th>
+        </tr>
+        {% for r in results %}
+        <tr>
+            <td>{{ r.artist }}</td>
+            <td>{{ r.mbid }}</td>
+            <td>{{ r.status }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <script>
+        const csvData = `{{ csv_data|safe }}`;
+        const blob = new Blob([csvData], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'artisti_mbid.csv';
+        a.click();
+    </script>
+    {% endif %}
 </body>
 </html>
