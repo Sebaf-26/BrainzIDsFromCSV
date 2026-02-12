@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, send_file
+from flask import Flask, request, render_template
 import csv
 import io
 import time
@@ -115,7 +115,7 @@ def index():
                             status = "aggiunto"
                         else:
                             status = "errore"
-            except:
+            except Exception as e:
                 status = "errore"
 
             writer.writerow([artist, mbid])
@@ -136,3 +136,7 @@ def index():
         )
 
     return render_template("index.html", results=None)
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
