@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  brainzids:
+    build: .
+    container_name: brainzids_lookup
+    volumes:
+      - ./data:/app/data
+    command: >
+      python mbid_lookup.py
+      --input /app/data/artisti_playlist.csv
+      --output /app/data/artisti_mbid.csv
+      --app "BrainzIDsFromCSV/1.0"
+      --contact "https://github.com/Sebaf-26"
