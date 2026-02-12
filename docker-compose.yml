@@ -5,10 +5,10 @@ services:
     build: .
     container_name: brainzids_lookup
     volumes:
-      - ./data:/app/data
+      - ${DATA_PATH}:/app/data
     command: >
       python mbid_lookup.py
-      --input /app/data/artisti_playlist.csv
-      --output /app/data/artisti_mbid.csv
-      --app "BrainzIDsFromCSV/1.0"
-      --contact "https://github.com/Sebaf-26"
+      --input /app/data/${INPUT_FILE}
+      --output /app/data/${OUTPUT_FILE}
+      --app "${APP_NAME}"
+      --contact "${APP_CONTACT}"
