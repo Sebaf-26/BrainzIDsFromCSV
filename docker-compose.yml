@@ -9,16 +9,5 @@ services:
     environment:
       - APP_NAME=${APP_NAME}
       - APP_CONTACT=${APP_CONTACT}
-
-  lidarr_import:
-    build: .
-    container_name: lidarr_import
-    depends_on:
-      - brainzids
-    volumes:
-      - ${DATA_PATH}:/data
-    command: python lidarr_import.py
-    environment:
       - LIDARR_URL=${LIDARR_URL}
       - LIDARR_API_KEY=${LIDARR_API_KEY}
-      - CSV_PATH=/data/artisti_mbid.csv
