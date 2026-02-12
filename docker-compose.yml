@@ -3,12 +3,9 @@ version: "3.9"
 services:
   brainzids:
     build: .
-    container_name: brainzids_lookup
-    volumes:
-      - ${DATA_PATH}:/app/data
-    command: >
-      python mbid_lookup.py
-      --input /app/data/${INPUT_FILE}
-      --output /app/data/${OUTPUT_FILE}
-      --app "${APP_NAME}"
-      --contact "${APP_CONTACT}"
+    container_name: brainzids_web
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_NAME=BrainzIDsFromCSV/1.0
+      - APP_CONTACT=https://github.com/Sebaf-26
