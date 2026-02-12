@@ -1,11 +1,9 @@
-version: "3.9"
-
 services:
   brainzids:
     build: .
     container_name: brainzids_web
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       - APP_NAME=BrainzIDsFromCSV/1.0
       - APP_CONTACT=https://github.com/Sebaf-26
