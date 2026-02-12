@@ -42,13 +42,28 @@ def search_artist(name):
 def get_root_folder():
     r = requests.get(f"{LIDARR_URL}/api/v1/rootfolder", headers=HEADERS_LIDARR)
     r.raise_for_status()
-    return r.json()[0]["id"]
+    data = r.json()
+    if not data:
+        raise Exception("Nessuna root folder configurata in Lidarr")
+    return data[0]["path"]
 
 
 def get_quality_profile():
     r = requests.get(f"{LIDARR_URL}/api/v1/qualityprofile", headers=HEADERS_LIDARR)
     r.raise_for_status()
-    return r.json()[0]["id"]
+    data = r.json()
+    if not data:
+        raise Exception("Nessun quality profile configurato in Lidarr")
+    return data[0]["id"]
+
+
+def get_metadata_profile():
+    r = requests.get(f"{LIDARR_URL}/api/v1/metadataprofile", headers=HEADERS_LIDARR)
+    r.raise_for_status()
+    data = r.json()
+    if not data:
+        raise Exception("Nessun metadata profile configurato")
+    return data[0]["id"]
 
 
 def artist_exists(mbid):
@@ -60,19 +75,29 @@ def artist_exists(mbid):
     return False
 
 
-def add_artist(mbid, root_id, profile_id):
+def add_artist(name, mbid, root_path, quality_id, metadata_id):
     payload = {
+        "artistName": name,
         "foreignArtistId": mbid,
         "monitored": False,
-        "qualityProfileId": profile_id,
-        "rootFolderId": root_id,
+        "qualityProfileId": quality_id,
+        "metadataProfileId": metadata_id,
+        "rootFolderPath": root_path,
         "addOptions": {
             "monitor": "none"
         }
     }
 
-    r = requests.post(f"{LIDARR_URL}/api/v1/artist", json=payload, headers=HEADERS_LIDARR)
-    return r.status_code in (200, 201)
+    r = requests.post(
+        f"{LIDARR_URL}/api/v1/artist",
+        json=payload,
+        headers=HEADERS_LIDARR
+    )
+
+    if r.status_code in (200, 201):
+        return True
+    else:
+        raise Exception(r.text)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -88,15 +113,14 @@ def index():
         if "Artist" not in reader.fieldnames:
             return "CSV must contain 'Artist' column", 400
 
-        # Prepara Lidarr
-        root_id = get_root_folder()
-        profile_id = get_quality_profile()
-
-        output = io.StringIO()
-        writer = csv.writer(output)
-        writer.writerow(["Artist", "MBID"])
-
         results = []
+
+        try:
+            root_path = get_root_folder()
+            quality_id = get_quality_profile()
+            metadata_id = get_metadata_profile()
+        except Exception as e:
+            return f"Errore configurazione Lidarr: {str(e)}", 500
 
         for row in reader:
             artist = row["Artist"].strip()
@@ -111,14 +135,11 @@ def index():
                     if artist_exists(mbid):
                         status = "già presente"
                     else:
-                        if add_artist(mbid, root_id, profile_id):
-                            status = "aggiunto"
-                        else:
-                            status = "errore"
+                        add_artist(artist, mbid, root_path, quality_id, metadata_id)
+                        status = "aggiunto"
             except Exception as e:
-                status = "errore"
+                status = f"errore: {str(e)}"
 
-            writer.writerow([artist, mbid])
             results.append({
                 "artist": artist,
                 "mbid": mbid,
@@ -127,13 +148,7 @@ def index():
 
             time.sleep(1)
 
-        output.seek(0)
-
-        return render_template(
-            "index.html",
-            results=results,
-            csv_data=output.getvalue()
-        )
+        return render_template("index.html", results=results)
 
     return render_template("index.html", results=None)
 
